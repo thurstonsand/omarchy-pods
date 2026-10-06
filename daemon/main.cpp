@@ -877,7 +877,8 @@ private slots:
         // fires PropertiesChanged Connected=false on suspend and the user
         // doesn't want to see "AirPods Disconnected" every time they close
         // the lid. Tray icon still resets so visual state is accurate.
-        if (!m_isSuspending) {
+        if (m_disconnectToastPending && !m_isSuspending) {
+            m_disconnectToastPending = false;
             m_notifier->notify(
                 tr("AirPods Disconnected"),
                 tr("Your AirPods have been disconnected"));
@@ -1148,6 +1149,7 @@ private slots:
             localSocket->setProperty("openpodsControlConnected", true);
             m_retryCount = 0;
             m_disconnectFinalized = false;
+            m_disconnectToastPending = true;
             if (localSocket->property("openpodsControlRecovery").toBool()) {
                 finishControlRecovery();
             }
@@ -1657,6 +1659,8 @@ private:
     ControlReconnect::Session m_controlRecovery;
     bool m_isSuspending = false;
     bool m_disconnectFinalized = false;
+    // Recovery re-arms m_disconnectFinalized on every attempt, so only a control link that actually came up earns a toast.
+    bool m_disconnectToastPending = false;
     QString m_lastAirPodsAddress;
     QString m_lastAirPodsName;
 
